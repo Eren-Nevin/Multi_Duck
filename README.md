@@ -1,7 +1,16 @@
 # Multi_Duck
 
-Multi-user REST API wrapper for DuckDB with concurrent read/write support. This is not intended for serving external customers and doesn't have security or (probably) performance to do so. The main goal is to be used as a fast replacement for SQL-Lite for data intensive applications with the added ability to handle multi processes. It can be embedded in multi-process (e.g. microservice) applications. For easier use you may need to roll your own client library or use available ones for your language.
-** This is not intended for use in production.
+## DuckDB Multi-User REST API
+
+A RESTful bridge for DuckDB enabling concurrent multi-process access.
+
+* **Use Case:** A fast, multi-process replacement for SQLite/DuckDB in data-intensive microservices.
+* **Performance:** Optimized for internal data pipelines rather than public-facing APIs.
+* **Security:** **None.** Do not expose this to the external internet.
+* **Clients:** Roll your own client or use standard HTTP libraries.
+
+> [!WARNING]
+> **Experimental software.** This project is not intended for production environments.
 
 ## Overview
 
