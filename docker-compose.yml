@@ -1,0 +1,67 @@
+services:
+  multi-duck:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multi-duck
+    ports:
+      - "${MULTI_DUCK_PORT:-8000}:8000"
+    volumes:
+      # Persist database outside container
+      - multi_duck_data:/data
+    environment:
+      - MULTI_DUCK_DB_PATH=/data/multi_duck.duckdb
+      - MULTI_DUCK_HOST=0.0.0.0
+      - MULTI_DUCK_PORT=8000
+      - MULTI_DUCK_READ_POOL_SIZE=${MULTI_DUCK_READ_POOL_SIZE:-10}
+      - MULTI_DUCK_VACUUM_INTERVAL=${MULTI_DUCK_VACUUM_INTERVAL:-86400}
+      - MULTI_DUCK_VACUUM_ENABLED=${MULTI_DUCK_VACUUM_ENABLED:-true}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Development service with hot reload
+  multi-duck-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: multi-duck-dev
+    ports:
+      - "${MULTI_DUCK_PORT:-8000}:8000"
+    volumes:
+      # Mount source code for hot reload
+      - ./multi_duck:/app/multi_duck:ro
+      - multi_duck_dev_data:/data
+    environment:
+      - MULTI_DUCK_DB_PATH=/data/multi_duck.duckdb
+      - MULTI_DUCK_HOST=0.0.0.0
+      - MULTI_DUCK_PORT=8000
+      - MULTI_DUCK_READ_POOL_SIZE=5
+      - MULTI_DUCK_VACUUM_ENABLED=false
+    profiles:
+      - dev
+
+  # Test runner service
+  multi-duck-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: multi-duck-test
+    volumes:
+      - ./multi_duck:/app/multi_duck:ro
+      - ./tests:/app/tests:ro
+    environment:
+      - MULTI_DUCK_VACUUM_ENABLED=false
+    command: ["pytest", "-v", "--tb=short"]
+    profiles:
+      - test
+
+volumes:
+  multi_duck_data:
+    driver: local
+  multi_duck_dev_data:
+    driver: local

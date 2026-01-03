@@ -1,0 +1,37 @@
+# Multi_Duck Development Dockerfile
+# Includes dev dependencies for testing and hot reload
+
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml README.md ./
+COPY multi_duck/ ./multi_duck/
+COPY tests/ ./tests/
+
+# Install dependencies including dev extras
+RUN pip install --no-cache-dir ".[dev]"
+
+# Create data directory
+RUN mkdir -p /data
+
+# Set default environment variables
+ENV MULTI_DUCK_DB_PATH=/data/multi_duck.duckdb \
+    MULTI_DUCK_HOST=0.0.0.0 \
+    MULTI_DUCK_PORT=8000 \
+    MULTI_DUCK_READ_POOL_SIZE=5 \
+    MULTI_DUCK_VACUUM_ENABLED=false
+
+# Expose the API port
+EXPOSE 8000
+
+# Default command: run with uvicorn in reload mode
+CMD ["uvicorn", "multi_duck.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
